@@ -1,0 +1,1 @@
+{"name": "xgdn-pay", "version": "1.2.0", "description": "XGDN 支付平台前端 JS SDK - 支付状态实时监听、二维码展示、JSAPI支付", "main": "xgdn-pay.js", "files": ["xgdn-pay.js"], "keywords": ["xgdn", "payment", "sse", "wechat-pay", "qrcode"], "license": "MIT", "repository": {"type": "git", "url": ""}}
