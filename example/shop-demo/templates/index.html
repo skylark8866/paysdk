@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XGDN 充值中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 20px; }
+        
+        .nav {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-left { font-size: 18px; font-weight: bold; color: #333; }
+        .nav-right a { margin-left: 20px; color: #667eea; text-decoration: none; }
+        .nav-right a:hover { text-decoration: underline; }
+        
+        .user-info {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .balance { font-size: 48px; color: #e74c3c; font-weight: bold; }
+        .balance::before { content: "¥"; font-size: 24px; }
+        .balance-label { color: #666; margin-top: 8px; }
+        
+        .packages {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .package-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+        .package-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .package-card.recommended { border-color: #e74c3c; }
+        .package-name { font-size: 16px; color: #333; margin-bottom: 8px; }
+        .package-amount { font-size: 32px; color: #e74c3c; font-weight: bold; }
+        .package-amount::before { content: "¥"; font-size: 16px; }
+        .package-bonus {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        .package-total { color: #666; font-size: 14px; margin-top: 8px; }
+        
+        .custom-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .custom-title { font-size: 16px; color: #333; margin-bottom: 16px; }
+        .custom-input-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .custom-input {
+            width: 150px;
+            padding: 12px 16px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        .custom-input:focus { border-color: #667eea; }
+        .custom-unit { font-size: 20px; color: #666; }
+        .custom-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .custom-btn:hover { opacity: 0.9; }
+        .custom-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .login-prompt {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+        .login-prompt p { color: #666; margin-bottom: 20px; }
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 XGDN 充值中心</h1>
+        
+        <div class="nav">
+            <div class="nav-left">XGDN 充值</div>
+            <div class="nav-right">
+                {{if .User}}
+                    <span>欢迎，{{.User.Username}}</span>
+                    <a href="/history">充值记录</a>
+                    <a href="#" onclick="logout()">退出</a>
+                {{else}}
+                    <a href="/login">登录</a>
+                    <a href="/register">注册</a>
+                {{end}}
+            </div>
+        </div>
+        
+        {{if .User}}
+        <div class="user-info">
+            <div class="balance">{{printf "%.2f" .User.Balance}}</div>
+            <div class="balance-label">账户余额（元）</div>
+        </div>
+        
+        <div class="packages">
+            {{range .Packages}}
+            <div class="package-card" onclick="selectPackage('{{.ID}}')">
+                <div class="package-name">{{.Name}}</div>
+                <div class="package-amount">{{printf "%.0f" .PayAmount}}</div>
+                {{if .BonusAmount}}
+                <div class="package-bonus">赠送 {{printf "%.0f" .BonusAmount}} 元</div>
+                {{end}}
+                <div class="package-total">到账 {{printf "%.0f" .TotalAmount}} 元</div>
+            </div>
+            {{end}}
+        </div>
+        
+        <div class="custom-section">
+            <div class="custom-title">自定义充值金额</div>
+            <div class="custom-input-group">
+                <span class="custom-unit">¥</span>
+                <input type="number" class="custom-input" id="customAmount" min="1" max="10000" step="1" placeholder="金额">
+                <span class="custom-unit">元</span>
+                <button class="custom-btn" onclick="selectCustomAmount()">立即充值</button>
+            </div>
+        </div>
+        {{else}}
+        <div class="login-prompt">
+            <p>请先登录后进行充值</p>
+            <a href="/login" class="btn">立即登录</a>
+            <a href="/register" class="btn btn-outline" style="margin-left: 12px;">注册账号</a>
+        </div>
+        {{end}}
+    </div>
+    
+    <script>
+        function selectPackage(packageId) {
+            window.location.href = '/recharge?package_id=' + packageId;
+        }
+        
+        function selectCustomAmount() {
+            const input = document.getElementById('customAmount');
+            const amount = parseFloat(input.value);
+            
+            if (!amount || amount < 1) {
+                alert('请输入有效的充值金额（最低 1 元）');
+                return;
+            }
+            
+            if (amount > 10000) {
+                alert('单次充值金额不能超过 10000 元');
+                return;
+            }
+            
+            window.location.href = '/recharge?amount=' + amount;
+        }
+        
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

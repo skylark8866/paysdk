@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充值记录 - XGDN 充值中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 20px; }
+        
+        .nav {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-left { font-size: 18px; font-weight: bold; color: #333; }
+        .nav-right a { margin-left: 20px; color: #667eea; text-decoration: none; }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 18px; color: #333; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+        
+        .balance-display {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .balance-value { font-size: 48px; color: #e74c3c; font-weight: bold; }
+        .balance-value::before { content: "¥"; font-size: 24px; }
+        .balance-label { color: #666; margin-top: 8px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { color: #666; font-weight: 500; }
+        td { color: #333; }
+        .status-pending { color: #f39c12; }
+        .status-paid { color: #27ae60; }
+        .amount { color: #e74c3c; font-weight: 500; }
+        .empty { text-align: center; color: #999; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 充值记录</h1>
+        
+        <div class="nav">
+            <div class="nav-left">XGDN 充值</div>
+            <div class="nav-right">
+                <a href="/">返回首页</a>
+                <a href="#" onclick="logout()">退出</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="balance-display">
+                <div class="balance-value">{{printf "%.2f" .User.Balance}}</div>
+                <div class="balance-label">当前余额（元）</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">充值订单</div>
+            {{if .Orders}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>订单号</th>
+                        <th>金额</th>
+                        <th>赠送</th>
+                        <th>状态</th>
+                        <th>时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Orders}}
+                    <tr>
+                        <td style="font-size: 12px;">{{.OrderNo}}</td>
+                        <td class="amount">¥{{printf "%.2f" .PayAmount}}</td>
+                        <td>{{if gt .BonusAmount 0}}+{{printf "%.2f" .BonusAmount}}{{else}}-{{end}}</td>
+                        <td>
+                            {{if eq .Status 1}}
+                            <span class="status-paid">已支付</span>
+                            {{else}}
+                            <span class="status-pending">待支付</span>
+                            {{end}}
+                        </td>
+                        <td style="font-size: 12px;">{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty">暂无充值记录</div>
+            {{end}}
+        </div>
+        
+        <div class="card">
+            <div class="card-title">余额变动</div>
+            {{if .Logs}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>类型</th>
+                        <th>金额</th>
+                        <th>余额</th>
+                        <th>备注</th>
+                        <th>时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Logs}}
+                    <tr>
+                        <td>
+                            {{if eq .Type 1}}充值
+                            {{else if eq .Type 2}}消费
+                            {{else}}退款
+                            {{end}}
+                        </td>
+                        <td class="amount">+{{printf "%.2f" .Amount}}</td>
+                        <td>¥{{printf "%.2f" .Balance}}</td>
+                        <td style="font-size: 12px;">{{.Remark}}</td>
+                        <td style="font-size: 12px;">{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty">暂无余额变动记录</div>
+            {{end}}
+        </div>
+    </div>
+    
+    <script>
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

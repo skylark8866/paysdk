@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充值支付 - XGDN 充值中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .package-info {
+            text-align: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+        }
+        .package-name { font-size: 20px; color: #333; margin-bottom: 8px; }
+        .package-amount { font-size: 48px; color: #e74c3c; font-weight: bold; }
+        .package-amount::before { content: "¥"; font-size: 24px; }
+        .package-bonus { color: #ff6b6b; margin-top: 8px; }
+        
+        .qrcode-section { text-align: center; }
+        .qrcode-section p { color: #666; margin-bottom: 16px; }
+        .qrcode-box {
+            display: inline-block;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+        #qrcode { width: 200px; height: 200px; }
+        
+        .status-section { text-align: center; margin-top: 24px; }
+        .status-text { color: #666; margin-bottom: 8px; }
+        .status-waiting { color: #f39c12; }
+        .status-success { color: #27ae60; font-size: 20px; font-weight: bold; }
+        
+        .actions { margin-top: 24px; text-align: center; }
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            margin-left: 12px;
+        }
+        
+        .loading { text-align: center; padding: 40px; color: #666; }
+        
+        .pay-url-box {
+            background: #f8f9fa;
+            border: 1px dashed #667eea;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            word-break: break-all;
+            font-size: 12px;
+            color: #666;
+        }
+        .copy-btn {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="package-info">
+                <div class="package-name">{{.Package.Name}}</div>
+                <div class="package-amount">{{printf "%.0f" .Package.PayAmount}}</div>
+                {{if .Package.BonusAmount}}
+                <div class="package-bonus">赠送 {{printf "%.0f" .Package.BonusAmount}} 元，到账 {{printf "%.0f" .Package.TotalAmount}} 元</div>
+                {{end}}
+            </div>
+            
+            <div class="qrcode-section" id="qrcodeSection" style="display: none;">
+                <p>请使用微信扫描下方二维码完成支付</p>
+                <div class="qrcode-box">
+                    <img id="qrcode" width="200" height="200" alt="支付二维码">
+                </div>
+                <div class="pay-url-box" id="payUrlBox" style="display: none;">
+                    <div>或复制以下链接到微信打开：</div>
+                    <div id="payUrlText"></div>
+                    <button class="copy-btn" onclick="copyPayUrl()">复制链接</button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">正在创建订单...</div>
+            
+            <div class="status-section" id="statusSection" style="display: none;">
+                <div class="status-text" id="statusText">等待支付中...</div>
+            </div>
+            
+            <div class="actions" id="actions" style="display: none;">
+                <a href="/" class="btn">返回首页</a>
+                <a href="/history" class="btn btn-secondary">查看记录</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const packageId = '{{.Package.ID}}';
+        let orderNo = '';
+        let payUrl = '';
+        
+        async function createOrder() {
+            try {
+                const resp = await fetch('/api/recharge/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ package_id: packageId })
+                });
+                
+                const data = await resp.json();
+                
+                if (data.code !== 0) {
+                    document.getElementById('loading').textContent = '创建订单失败: ' + data.message;
+                    return;
+                }
+                
+                orderNo = data.data.order_no;
+                payUrl = data.data.code_url || data.data.pay_url;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('qrcodeSection').style.display = 'block';
+                document.getElementById('statusSection').style.display = 'block';
+                
+                if (payUrl) {
+                    // 使用 QR Server API 生成二维码
+                    var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(payUrl);
+                    document.getElementById('qrcode').src = qrUrl;
+                    
+                    // 显示支付链接
+                    document.getElementById('payUrlBox').style.display = 'block';
+                    document.getElementById('payUrlText').textContent = payUrl;
+                } else {
+                    document.getElementById('qrcodeSection').innerHTML = '<p style="color:#e74c3c;">支付链接生成失败，请重试</p>';
+                }
+                
+                startPolling();
+            } catch (err) {
+                document.getElementById('loading').textContent = '网络错误: ' + err.message;
+            }
+        }
+        
+        function copyPayUrl() {
+            if (payUrl) {
+                navigator.clipboard.writeText(payUrl).then(function() {
+                    alert('链接已复制到剪贴板');
+                }).catch(function() {
+                    var textarea = document.createElement('textarea');
+                    textarea.value = payUrl;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('链接已复制到剪贴板');
+                });
+            }
+        }
+        
+        function startPolling() {
+            connectSSE(0);
+        }
+        
+        function connectSSE(retryCount) {
+            const eventSource = new EventSource('/api/events/' + orderNo);
+            
+            eventSource.addEventListener('connected', function() {
+                retryCount = 0;
+            });
+            
+            eventSource.addEventListener('pay_notify', function(e) {
+                const data = JSON.parse(e.data);
+                
+                if (data.status === 'paid') {
+                    eventSource.close();
+                    
+                    document.getElementById('statusText').className = 'status-success';
+                    document.getElementById('statusText').textContent = '支付成功！';
+                    document.getElementById('actions').style.display = 'block';
+                }
+            });
+            
+            eventSource.onerror = function() {
+                eventSource.close();
+                
+                if (retryCount >= 10) {
+                    pollFallback();
+                    return;
+                }
+                
+                var delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
+                setTimeout(function() {
+                    connectSSE(retryCount + 1);
+                }, delay);
+            };
+        }
+        
+        function pollFallback() {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch('/api/recharge/status?order_no=' + orderNo);
+                    const data = await resp.json();
+                    
+                    if (data.code === 0 && data.data.status === 1) {
+                        clearInterval(interval);
+                        document.getElementById('statusText').className = 'status-success';
+                        document.getElementById('statusText').textContent = '支付成功！';
+                        document.getElementById('actions').style.display = 'block';
+                    }
+                } catch (err) {
+                    console.error('轮询失败:', err);
+                }
+            }, 2000);
+        }
+        
+        createOrder();
+    </script>
+</body>
+</html>

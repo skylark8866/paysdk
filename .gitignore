@@ -31,3 +31,10 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Database
+*.db
+
+# Example binaries
+example/**/server
+example/**/demo
