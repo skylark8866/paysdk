@@ -6,11 +6,13 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/sqlite v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/skylark8866/paysdk v1.3.0
 	github.com/spf13/viper v1.18.2
 	golang.org/x/crypto v0.25.0
 	gorm.io/gorm v1.25.7
-	github.com/skylark8866/paysdk v1.2.0
 )
+
+replace github.com/skylark8866/paysdk => ../../
 
 require (
 	github.com/bytedance/sonic v1.9.1 // indirect
@@ -63,4 +65,3 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
-

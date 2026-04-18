@@ -125,7 +125,7 @@ func (h *Hub) serveHandlerSSE(w http.ResponseWriter, r *http.Request, client *Cl
 		return
 	}
 
-	w.Write([]byte(SSEEventConnected))
+	w.Write(SSEEventConnected)
 	flusher.Flush()
 
 	for {

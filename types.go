@@ -7,39 +7,102 @@ import (
 	"time"
 )
 
+type PayType string
+
 const (
-	PayTypeNative = "native"
-	PayTypeJSAPI  = "jsapi"
+	PayTypeNative PayType = "native"
+	PayTypeJSAPI  PayType = "jsapi"
 )
 
-func NormalizePayType(raw string) string {
-	switch strings.ToLower(raw) {
-	case "native":
-		return PayTypeNative
-	case "jsapi":
-		return PayTypeJSAPI
-	default:
-		return strings.ToLower(raw)
-	}
+var validPayTypes = map[PayType]bool{
+	PayTypeNative: true,
+	PayTypeJSAPI:  true,
 }
 
-const (
-	OrderStatusPending  = 0
-	OrderStatusPaid     = 1
-	OrderStatusClosed   = 2
-	OrderStatusRefunded = 3
-)
+func (t PayType) IsValid() bool {
+	return validPayTypes[t]
+}
+
+func (t PayType) String() string {
+	return string(t)
+}
+
+func NormalizePayType(raw string) PayType {
+	lowered := PayType(strings.ToLower(raw))
+	if lowered.IsValid() {
+		return lowered
+	}
+	return PayType(strings.ToLower(raw))
+}
+
+type PayStatus string
 
 const (
-	RefundStatusProcessing = 0
-	RefundStatusSuccess    = 1
-	RefundStatusClosed     = 2
-	RefundStatusFailed     = 3
-	RefundStatusAbnormal   = 4
+	PayStatusPaid    PayStatus = "paid"
+	PayStatusPending PayStatus = "pending"
+	PayStatusClosed  PayStatus = "closed"
 )
 
-func StatusText(status int) string {
-	switch status {
+var validPayStatuses = map[PayStatus]bool{
+	PayStatusPaid:    true,
+	PayStatusPending: true,
+	PayStatusClosed:  true,
+}
+
+func (s PayStatus) IsValid() bool {
+	return validPayStatuses[s]
+}
+
+func (s PayStatus) String() string {
+	return string(s)
+}
+
+type PayChannel string
+
+const (
+	PayChannelWechat PayChannel = "wechat"
+	PayChannelAlipay PayChannel = "alipay"
+)
+
+var validPayChannels = map[PayChannel]bool{
+	PayChannelWechat: true,
+	PayChannelAlipay: true,
+}
+
+func (ch PayChannel) IsValid() bool {
+	return validPayChannels[ch]
+}
+
+func (ch PayChannel) String() string {
+	return string(ch)
+}
+
+type OrderStatus int
+
+const (
+	OrderStatusPending  OrderStatus = 0
+	OrderStatusPaid     OrderStatus = 1
+	OrderStatusClosed   OrderStatus = 2
+	OrderStatusRefunded OrderStatus = 3
+)
+
+var validOrderStatuses = map[OrderStatus]bool{
+	OrderStatusPending:  true,
+	OrderStatusPaid:     true,
+	OrderStatusClosed:   true,
+	OrderStatusRefunded: true,
+}
+
+func (s OrderStatus) IsValid() bool {
+	return validOrderStatuses[s]
+}
+
+func (s OrderStatus) String() string {
+	return fmt.Sprintf("%d", int(s))
+}
+
+func (s OrderStatus) Text() string {
+	switch s {
 	case OrderStatusPending:
 		return "待支付"
 	case OrderStatusPaid:
@@ -49,12 +112,38 @@ func StatusText(status int) string {
 	case OrderStatusRefunded:
 		return "已退款"
 	default:
-		return fmt.Sprintf("未知状态(%d)", status)
+		return fmt.Sprintf("未知状态(%d)", int(s))
 	}
 }
 
-func RefundStatusText(status int) string {
-	switch status {
+type RefundStatus int
+
+const (
+	RefundStatusProcessing RefundStatus = 0
+	RefundStatusSuccess    RefundStatus = 1
+	RefundStatusClosed     RefundStatus = 2
+	RefundStatusFailed     RefundStatus = 3
+	RefundStatusAbnormal   RefundStatus = 4
+)
+
+var validRefundStatuses = map[RefundStatus]bool{
+	RefundStatusProcessing: true,
+	RefundStatusSuccess:    true,
+	RefundStatusClosed:     true,
+	RefundStatusFailed:     true,
+	RefundStatusAbnormal:   true,
+}
+
+func (s RefundStatus) IsValid() bool {
+	return validRefundStatuses[s]
+}
+
+func (s RefundStatus) String() string {
+	return fmt.Sprintf("%d", int(s))
+}
+
+func (s RefundStatus) Text() string {
+	switch s {
 	case RefundStatusProcessing:
 		return "退款中"
 	case RefundStatusSuccess:
@@ -66,7 +155,7 @@ func RefundStatusText(status int) string {
 	case RefundStatusAbnormal:
 		return "退款异常"
 	default:
-		return fmt.Sprintf("未知状态(%d)", status)
+		return fmt.Sprintf("未知状态(%d)", int(s))
 	}
 }
 
@@ -104,7 +193,7 @@ type CreateOrderRequest struct {
 	OutOrderNo string                 `json:"out_order_no"`
 	Amount     float64                `json:"amount"`
 	Title      string                 `json:"title"`
-	PayType    string                 `json:"pay_type"`
+	PayType    PayType                `json:"pay_type"`
 	OpenID     string                 `json:"openid,omitempty"`
 	ReturnURL  string                 `json:"return_url,omitempty"`
 	NotifyURL  string                 `json:"notify_url,omitempty"`
@@ -199,21 +288,21 @@ type apiResponse[T any] struct {
 }
 
 type PayNotifyMessage struct {
-	OrderNo     string  `json:"order_no"`
-	OutOrderNo  string  `json:"out_order_no"`
-	Amount      float64 `json:"amount"`
-	Status      string  `json:"status"`
-	PaidAt      string  `json:"paid_at"`
-	PayType     string  `json:"pay_type"`
-	Transaction string  `json:"transaction_id,omitempty"`
+	OrderNo     string     `json:"order_no"`
+	OutOrderNo  string     `json:"out_order_no"`
+	Amount      float64    `json:"amount"`
+	Status      PayStatus  `json:"status"`
+	PaidAt      string     `json:"paid_at"`
+	PayType     PayChannel `json:"pay_type"`
+	Transaction string     `json:"transaction_id,omitempty"`
 }
 
-func NewPayNotifyMessage(orderNo string, amount float64, status string) *PayNotifyMessage {
+func NewPayNotifyMessage(orderNo string, amount float64, status PayStatus) *PayNotifyMessage {
 	return &PayNotifyMessage{
 		OrderNo: orderNo,
 		Amount:  amount,
 		Status:  status,
-		PaidAt:  time.Now().Format("2006-01-02 15:04:05"),
+		PaidAt:  time.Now().Format(DateTimeFormat),
 	}
 }
 
@@ -222,7 +311,7 @@ func (m *PayNotifyMessage) SetOutOrderNo(no string) *PayNotifyMessage {
 	return m
 }
 
-func (m *PayNotifyMessage) SetPayType(payType string) *PayNotifyMessage {
+func (m *PayNotifyMessage) SetPayType(payType PayChannel) *PayNotifyMessage {
 	m.PayType = payType
 	return m
 }

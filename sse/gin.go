@@ -72,25 +72,25 @@ func (h *Hub) GinHandler(opts ...GinOption) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		channel := h.resolveGinChannel(c, cfg)
 		if channel == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": ErrMsgChannelRequired})
+			c.JSON(http.StatusBadRequest, gin.H{RespFieldError: ErrMsgChannelRequired})
 			return
 		}
 
 		if err := ValidateChannel(channel); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{RespFieldError: err.Error()})
 			return
 		}
 
 		if cfg.beforeSubscribe != nil {
 			if err := cfg.beforeSubscribe(c, channel); err != nil {
-				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				c.JSON(http.StatusForbidden, gin.H{RespFieldError: err.Error()})
 				return
 			}
 		}
 
 		client, err := h.TrySubscribe(channel)
 		if err != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
+			c.JSON(http.StatusServiceUnavailable, gin.H{RespFieldError: err.Error()})
 			return
 		}
 		defer h.Unsubscribe(client)
@@ -158,7 +158,7 @@ func (h *Hub) serveGinSSEStream(c *gin.Context, client *Client) {
 func (h *Hub) serveGinSSEManual(c *gin.Context, client *Client) {
 	setSSEHeaders(c.Writer)
 
-	c.Writer.Write([]byte(SSEEventConnected))
+	c.Writer.Write(SSEEventConnected)
 	c.Writer.(http.Flusher).Flush()
 
 	for {

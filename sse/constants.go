@@ -1,5 +1,29 @@
 package sse
 
+type EventName string
+
+const (
+	EventConnected    EventName = "connected"
+	EventPayNotify    EventName = "pay_notify"
+	EventRefundNotify EventName = "refund_notify"
+	EventKeepAlive    EventName = "keep_alive"
+)
+
+var validEventNames = map[EventName]bool{
+	EventConnected:    true,
+	EventPayNotify:    true,
+	EventRefundNotify: true,
+	EventKeepAlive:    true,
+}
+
+func (e EventName) IsValid() bool {
+	return validEventNames[e]
+}
+
+func (e EventName) String() string {
+	return string(e)
+}
+
 const (
 	HeaderContentType  = "Content-Type"
 	HeaderCacheControl = "Cache-Control"
@@ -14,10 +38,14 @@ const (
 	SSECommentConnected = ": connected\n\n"
 	SSECommentKeepAlive = ": keep-alive\n\n"
 
-	SSEEventConnected = "event: connected\ndata: {}\n\n"
-
 	JSONContentType = "application/json"
+
+	RespFieldCode    = "code"
+	RespFieldMessage = "message"
+	RespFieldError   = "error"
 )
+
+var SSEEventConnected = FormatEvent(EventConnected, []byte("{}"))
 
 const (
 	DefaultChannelParam    = "channel"

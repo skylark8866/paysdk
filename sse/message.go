@@ -11,7 +11,7 @@ import (
 
 type Message struct {
 	ID    string      `json:"id,omitempty"`
-	Event string      `json:"event,omitempty"`
+	Event EventName   `json:"event,omitempty"`
 	Data  interface{} `json:"data"`
 }
 
@@ -24,7 +24,7 @@ func (m *Message) SetID(id string) *Message {
 	return m
 }
 
-func (m *Message) SetEvent(event string) *Message {
+func (m *Message) SetEvent(event EventName) *Message {
 	m.Event = event
 	return m
 }
@@ -40,7 +40,7 @@ func (m *Message) Bytes() []byte {
 
 	if m.Event != "" {
 		buf.WriteString("event: ")
-		buf.WriteString(m.Event)
+		buf.WriteString(string(m.Event))
 		buf.WriteString("\n")
 	}
 
@@ -60,7 +60,7 @@ func encodeJSON(v interface{}) ([]byte, error) {
 	return formatSSE("", "", data), nil
 }
 
-func formatSSE(id, event string, data []byte) []byte {
+func formatSSE(id string, event string, data []byte) []byte {
 	var buf bytes.Buffer
 
 	if id != "" {
@@ -86,8 +86,8 @@ func formatSSE(id, event string, data []byte) []byte {
 	return buf.Bytes()
 }
 
-func FormatEvent(event string, data []byte) []byte {
-	return formatSSE("", event, data)
+func FormatEvent(event EventName, data []byte) []byte {
+	return formatSSE("", string(event), data)
 }
 
 func FormatData(data []byte) []byte {

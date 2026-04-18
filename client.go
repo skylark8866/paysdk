@@ -45,7 +45,7 @@ func NewClient(appID, appSecret string, opts ...ClientOption) *Client {
 	}
 
 	c.client.SetBaseURL(c.baseURL)
-	c.client.SetHeader("Content-Type", ContentTypeJSON)
+	c.client.SetHeader(FieldContentType, ContentTypeJSON)
 
 	return c
 }
@@ -100,9 +100,13 @@ func (c *Client) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*Cre
 		outOrderNo = generateOrderNo()
 	}
 
-	payType := NormalizePayType(req.PayType)
+	payType := req.PayType
 	if payType == "" {
 		payType = PayTypeNative
+	}
+
+	if !payType.IsValid() {
+		return nil, NewSDKError(-1, ErrMsgInvalidPayType+": "+payType.String())
 	}
 
 	if payType == PayTypeJSAPI && req.OpenID == "" {
@@ -110,23 +114,23 @@ func (c *Client) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*Cre
 	}
 
 	data := map[string]interface{}{
-		"out_order_no": outOrderNo,
-		"amount":       req.Amount,
-		"title":        req.Title,
-		"pay_type":     payType,
+		FieldOutOrderNo: outOrderNo,
+		FieldAmount:     req.Amount,
+		FieldTitle:      req.Title,
+		FieldPayType:    payType,
 	}
 
 	if req.OpenID != "" {
-		data["openid"] = req.OpenID
+		data[FieldOpenID] = req.OpenID
 	}
 	if req.ReturnURL != "" {
-		data["return_url"] = req.ReturnURL
+		data[FieldReturnURL] = req.ReturnURL
 	}
 	if req.NotifyURL != "" {
-		data["notify_url"] = req.NotifyURL
+		data[FieldNotifyURL] = req.NotifyURL
 	}
 	if req.Extra != nil {
-		data["extra"] = req.Extra
+		data[FieldExtra] = req.Extra
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -158,7 +162,7 @@ func (c *Client) QueryOrder(ctx context.Context, orderNo string) (*QueryOrderRes
 	}
 
 	data := map[string]interface{}{
-		"order_no": orderNo,
+		FieldOrderNo: orderNo,
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -190,7 +194,7 @@ func (c *Client) CheckStatus(ctx context.Context, orderNo string) (*CheckStatusR
 	}
 
 	data := map[string]interface{}{
-		"order_no": orderNo,
+		FieldOrderNo: orderNo,
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -222,7 +226,7 @@ func (c *Client) CloseOrder(ctx context.Context, orderNo string) error {
 	}
 
 	data := map[string]interface{}{
-		"order_no": orderNo,
+		FieldOrderNo: orderNo,
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -268,13 +272,13 @@ func (c *Client) WaitForPayment(ctx context.Context, orderNo string, interval, t
 				continue
 			}
 
-			switch result.Status {
+			switch OrderStatus(result.Status) {
 			case OrderStatusPaid:
 				return nil
 			case OrderStatusClosed:
-				return NewSDKError(-10, "订单已关闭")
+				return NewSDKError(-10, ErrMsgOrderClosed)
 			case OrderStatusRefunded:
-				return NewSDKError(-11, "订单已退款")
+				return NewSDKError(-11, ErrMsgOrderRefunded)
 			}
 		}
 	}
@@ -304,14 +308,14 @@ func (c *Client) CreateRefund(ctx context.Context, req *RefundRequest) (*RefundR
 	}
 
 	data := map[string]interface{}{
-		"order_no":  req.OrderNo,
-		"refund_no": refundNo,
-		"amount":    req.Amount,
-		"reason":    reason,
+		FieldOrderNo:  req.OrderNo,
+		FieldRefundNo: refundNo,
+		FieldAmount:   req.Amount,
+		FieldReason:   reason,
 	}
 
 	if req.NotifyURL != "" {
-		data["notify_url"] = req.NotifyURL
+		data[FieldNotifyURL] = req.NotifyURL
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -343,7 +347,7 @@ func (c *Client) QueryRefund(ctx context.Context, refundNo string) (*RefundRespo
 	}
 
 	data := map[string]interface{}{
-		"refund_no": refundNo,
+		FieldRefundNo: refundNo,
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -375,7 +379,7 @@ func (c *Client) GetRefundsByOrderNo(ctx context.Context, orderNo string) ([]Ref
 	}
 
 	data := map[string]interface{}{
-		"order_no": orderNo,
+		FieldOrderNo: orderNo,
 	}
 
 	signedReq, err := c.buildSignedRequest(data)
@@ -407,7 +411,7 @@ func (c *Client) GetOrderRefundInfo(ctx context.Context, orderNo string) (*Order
 	}
 
 	data := map[string]interface{}{
-		"order_no": orderNo,
+		FieldOrderNo: orderNo,
 	}
 
 	signedReq, err := c.buildSignedRequest(data)

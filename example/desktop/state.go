@@ -24,7 +24,7 @@ type AppState struct {
 	OutOrderNo  string
 	Amount      float64
 	Title       string
-	PayType     string
+	PayType     xgdnpay.PayType
 	CodeURL     string
 	QRCodeImage image.Image
 
@@ -160,7 +160,7 @@ func (s *AppState) startPolling() {
 			}
 
 			s.mu.Lock()
-			if result.Status == xgdnpay.OrderStatusPaid {
+			if xgdnpay.OrderStatus(result.Status) == xgdnpay.OrderStatusPaid {
 				s.IsPaid = true
 				s.IsPolling = false
 				s.Status = "支付成功！"
@@ -169,14 +169,14 @@ func (s *AppState) startPolling() {
 				return
 			}
 
-			if result.Status == xgdnpay.OrderStatusClosed {
+			if xgdnpay.OrderStatus(result.Status) == xgdnpay.OrderStatusClosed {
 				s.Status = "订单已关闭"
 				s.IsPolling = false
 				s.mu.Unlock()
 				return
 			}
 
-			if result.Status == xgdnpay.OrderStatusRefunded {
+			if xgdnpay.OrderStatus(result.Status) == xgdnpay.OrderStatusRefunded {
 				s.IsRefunded = true
 				s.Status = "订单已退款"
 				s.IsPolling = false
@@ -207,7 +207,7 @@ func (s *AppState) QueryOrder() {
 	}
 
 	statusText := "未知"
-	switch result.Status {
+	switch xgdnpay.OrderStatus(result.Status) {
 	case xgdnpay.OrderStatusPending:
 		statusText = "待支付"
 	case xgdnpay.OrderStatusPaid:

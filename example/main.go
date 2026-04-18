@@ -43,7 +43,7 @@ func main() {
 		fmt.Printf("查询订单失败: %v\n", err)
 		return
 	}
-	fmt.Printf("订单状态: %d (%s)\n", queryResult.Status, xgdnpay.StatusText(queryResult.Status))
+	fmt.Printf("订单状态: %d (%s)\n", queryResult.Status, xgdnpay.OrderStatus(queryResult.Status).Text())
 	fmt.Printf("订单金额: %.2f\n", queryResult.Amount)
 
 	fmt.Println("\n=== 轮询等待支付（最多等待5分钟）===")
@@ -65,7 +65,7 @@ func main() {
 		return
 	}
 	fmt.Printf("退款单号: %s\n", refund.RefundNo)
-	fmt.Printf("退款状态: %d (%s)\n", refund.Status, xgdnpay.RefundStatusText(refund.Status))
+	fmt.Printf("退款状态: %d (%s)\n", refund.Status, xgdnpay.RefundStatus(refund.Status).Text())
 
 	fmt.Println("\n=== 查询退款状态 ===")
 	refundQuery, err := client.QueryRefund(ctx, refund.RefundNo)
@@ -73,7 +73,7 @@ func main() {
 		fmt.Printf("查询退款失败: %v\n", err)
 		return
 	}
-	fmt.Printf("退款状态: %d (%s)\n", refundQuery.Status, xgdnpay.RefundStatusText(refundQuery.Status))
+	fmt.Printf("退款状态: %d (%s)\n", refundQuery.Status, xgdnpay.RefundStatus(refundQuery.Status).Text())
 	fmt.Printf("退款金额: %.2f\n", refundQuery.RefundAmount)
 }
 
@@ -83,7 +83,7 @@ func ExampleNotifyHandler() {
 	notifyHandler := xgdnpay.NewNotifyHandler(client, func(req *xgdnpay.NotifyRequest) error {
 		fmt.Printf("收到支付回调: 订单号=%s, 金额=%.2f\n", req.OrderNo, req.Amount)
 
-		if req.Status == xgdnpay.OrderStatusPaid {
+		if xgdnpay.OrderStatus(req.Status) == xgdnpay.OrderStatusPaid {
 			fmt.Println("支付成功，处理业务逻辑...")
 		}
 
@@ -122,7 +122,7 @@ func ExampleManualVerify() {
 		OutOrderNo:    "BUSINESS_001",
 		TransactionID: "WX_TRANS_001",
 		Amount:        0.01,
-		Status:        xgdnpay.OrderStatusPaid,
+		Status:        int(xgdnpay.OrderStatusPaid),
 		PaidAt:        "2024-01-01 12:00:00",
 		Timestamp:     fmt.Sprintf("%d", time.Now().Unix()),
 		Sign:          "xxx",

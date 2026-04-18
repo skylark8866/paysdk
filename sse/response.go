@@ -15,23 +15,5 @@ func setSSEHeaders(w http.ResponseWriter) {
 func writeJSONError(w http.ResponseWriter, code int, message string) {
 	w.Header().Set(HeaderContentType, JSONContentType)
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(map[string]string{"error": message})
-}
-
-func writeNotifySuccess(w http.ResponseWriter) {
-	w.Header().Set(HeaderContentType, JSONContentType)
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{
-		"code":    0,
-		"message": "成功",
-	})
-}
-
-func writeNotifyError(w http.ResponseWriter, code int, message string) {
-	w.Header().Set(HeaderContentType, JSONContentType)
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{
-		"code":    code,
-		"message": message,
-	})
+	json.NewEncoder(w).Encode(map[string]string{RespFieldError: message})
 }

@@ -104,7 +104,7 @@ func (s *RechargeService) GetOrder(orderNo string) (*model.RechargeOrder, error)
 }
 
 func (s *RechargeService) HandlePaymentCallback(outOrderNo string, status int) error {
-	if status != xgdnpay.OrderStatusPaid {
+	if xgdnpay.OrderStatus(status) != xgdnpay.OrderStatusPaid {
 		return nil
 	}
 
@@ -125,9 +125,9 @@ func (s *RechargeService) HandlePaymentCallback(outOrderNo string, status int) e
 	}
 
 	if s.sseHub != nil {
-		msg := xgdnpay.NewPayNotifyMessage(outOrderNo, order.PayAmount, "paid").
-			SetPayType("wechat")
-		data := sse.FormatEvent("pay_notify", mustMarshal(msg))
+		msg := xgdnpay.NewPayNotifyMessage(outOrderNo, order.PayAmount, xgdnpay.PayStatusPaid).
+			SetPayType(xgdnpay.PayChannelWechat)
+		data := sse.FormatEvent(sse.EventPayNotify, mustMarshal(msg))
 		s.sseHub.Broadcast(outOrderNo, data)
 	}
 

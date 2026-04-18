@@ -4,6 +4,8 @@ const (
 	DefaultBaseURL = "https://pay.xgdn.net"
 
 	ContentTypeJSON = "application/json"
+	DateTimeFormat  = "2006-01-02 15:04:05"
+	AmountFormat    = "%.2f"
 )
 
 const (
@@ -15,6 +17,43 @@ const (
 	PathRefundQuery = "/api/v1/refund/query"
 	PathRefundOrder = "/api/v1/refund/order"
 	PathRefundInfo  = "/api/v1/refund/info"
+)
+
+const (
+	FieldAppID         = "app_id"
+	FieldOrderNo       = "order_no"
+	FieldOutOrderNo    = "out_order_no"
+	FieldAmount        = "amount"
+	FieldTitle         = "title"
+	FieldPayType       = "pay_type"
+	FieldOpenID        = "openid"
+	FieldReturnURL     = "return_url"
+	FieldNotifyURL     = "notify_url"
+	FieldExtra         = "extra"
+	FieldRefundNo      = "refund_no"
+	FieldReason        = "reason"
+	FieldStatus        = "status"
+	FieldTransactionID = "transaction_id"
+	FieldPaidAt        = "paid_at"
+	FieldTimestamp     = "timestamp"
+	FieldNonce         = "nonce"
+	FieldSign          = "sign"
+	FieldData          = "data"
+	FieldAppSecret     = "app_secret"
+	FieldSuccessTime   = "success_time"
+	FieldRefundAmount  = "refund_amount"
+	FieldRefundReason  = "refund_reason"
+	FieldCreatedAt     = "created_at"
+	FieldOrderAmount   = "order_amount"
+	FieldTotalRefunded = "total_refunded"
+	FieldRemaining     = "remaining_amount"
+	FieldCanRefund     = "can_refund"
+	FieldMessage       = "message"
+	FieldCode          = "code"
+	FieldPayURL        = "pay_url"
+	FieldCodeURL       = "code_url"
+	FieldError         = "error"
+	FieldContentType   = "Content-Type"
 )
 
 const (
@@ -31,6 +70,11 @@ const (
 	ErrMsgSignVerifyFail    = "签名验证失败"
 	ErrMsgParseNotifyFail   = "parse notify failed"
 	ErrMsgParseRefundFail   = "parse refund notify failed"
+	ErrMsgMarshalData       = "marshal data failed"
+	ErrMsgSortJSON          = "sort json failed"
+	ErrMsgOrderClosed       = "订单已关闭"
+	ErrMsgOrderRefunded     = "订单已退款"
+	ErrMsgInvalidPayType    = "不支持的支付类型"
 )
 
 const (

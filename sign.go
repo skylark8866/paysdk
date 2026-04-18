@@ -29,12 +29,12 @@ func GenerateNonce() string {
 func (c *Client) buildSignedRequest(data interface{}) (*SignedRequest, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return nil, fmt.Errorf("marshal data failed: %w", err)
+		return nil, fmt.Errorf("%s: %w", ErrMsgMarshalData, err)
 	}
 
 	sortedData, err := SortJSON(dataBytes)
 	if err != nil {
-		return nil, fmt.Errorf("sort json failed: %w", err)
+		return nil, fmt.Errorf("%s: %w", ErrMsgSortJSON, err)
 	}
 
 	timestamp := GenerateTimestamp()
@@ -53,15 +53,24 @@ func (c *Client) buildSignedRequest(data interface{}) (*SignedRequest, error) {
 func CalculateSignV2(appID, timestamp, nonce, sortedData, appSecret string) string {
 	var sb strings.Builder
 	sb.Grow(len(appID) + len(sortedData) + len(nonce) + len(timestamp) + len(appSecret) + 64)
-	sb.WriteString("app_id=")
+	sb.WriteString(FieldAppID)
+	sb.WriteString("=")
 	sb.WriteString(appID)
-	sb.WriteString("&data=")
+	sb.WriteString("&")
+	sb.WriteString(FieldData)
+	sb.WriteString("=")
 	sb.WriteString(sortedData)
-	sb.WriteString("&nonce=")
+	sb.WriteString("&")
+	sb.WriteString(FieldNonce)
+	sb.WriteString("=")
 	sb.WriteString(nonce)
-	sb.WriteString("&timestamp=")
+	sb.WriteString("&")
+	sb.WriteString(FieldTimestamp)
+	sb.WriteString("=")
 	sb.WriteString(timestamp)
-	sb.WriteString("&app_secret=")
+	sb.WriteString("&")
+	sb.WriteString(FieldAppSecret)
+	sb.WriteString("=")
 	sb.WriteString(appSecret)
 
 	hash := sha256.Sum256([]byte(sb.String()))
@@ -118,12 +127,12 @@ func sortSlice(s []interface{}) []interface{} {
 }
 
 func VerifySign(params map[string]string, appSecret string, maxDelay int64) error {
-	sign, ok := params["sign"]
+	sign, ok := params[FieldSign]
 	if !ok || sign == "" {
 		return fmt.Errorf(ErrMsgSignNotFound)
 	}
 
-	timestampStr, ok := params["timestamp"]
+	timestampStr, ok := params[FieldTimestamp]
 	if !ok || timestampStr == "" {
 		return fmt.Errorf(ErrMsgTimestampNotFound)
 	}
@@ -143,7 +152,7 @@ func VerifySign(params map[string]string, appSecret string, maxDelay int64) erro
 
 	keys := make([]string, 0, len(params))
 	for k := range params {
-		if k != "sign" {
+		if k != FieldSign {
 			keys = append(keys, k)
 		}
 	}
@@ -160,7 +169,8 @@ func VerifySign(params map[string]string, appSecret string, maxDelay int64) erro
 			sb.WriteString("&")
 		}
 	}
-	sb.WriteString("app_secret=")
+	sb.WriteString(FieldAppSecret)
+	sb.WriteString("=")
 	sb.WriteString(appSecret)
 
 	hash := sha256.Sum256([]byte(sb.String()))

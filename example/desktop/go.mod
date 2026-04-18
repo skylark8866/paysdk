@@ -7,8 +7,10 @@ toolchain go1.24.13
 require (
 	gioui.org v0.9.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	github.com/skylark8866/paysdk v1.2.0
+	github.com/skylark8866/paysdk v1.3.0
 )
+
+replace github.com/skylark8866/paysdk => ../../
 
 require (
 	gioui.org/shader v1.0.8 // indirect
@@ -20,4 +22,3 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 )
-

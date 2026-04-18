@@ -78,32 +78,32 @@ func (h *NotifyHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func VerifyNotifyWithSecret(req *NotifyRequest, appSecret string, maxDelay int64) error {
 	params := map[string]string{
-		"app_id":         req.AppID,
-		"order_no":       req.OrderNo,
-		"out_order_no":   req.OutOrderNo,
-		"amount":         formatAmount(req.Amount),
-		"title":          req.Title,
-		"pay_type":       req.PayType,
-		"status":         formatInt(req.Status),
-		"transaction_id": req.TransactionID,
-		"paid_at":        req.PaidAt,
-		"timestamp":      req.Timestamp,
-		"nonce":          req.Nonce,
-		"sign":           req.Sign,
+		FieldAppID:         req.AppID,
+		FieldOrderNo:       req.OrderNo,
+		FieldOutOrderNo:    req.OutOrderNo,
+		FieldAmount:        formatAmount(req.Amount),
+		FieldTitle:         req.Title,
+		FieldPayType:       req.PayType,
+		FieldStatus:        formatInt(req.Status),
+		FieldTransactionID: req.TransactionID,
+		FieldPaidAt:        req.PaidAt,
+		FieldTimestamp:     req.Timestamp,
+		FieldNonce:         req.Nonce,
+		FieldSign:          req.Sign,
 	}
 	return VerifySign(params, appSecret, maxDelay)
 }
 
 func VerifyRefundNotifyWithSecret(req *RefundNotifyRequest, appSecret string, maxDelay int64) error {
 	params := map[string]string{
-		"refund_no":      req.RefundNo,
-		"order_no":       req.OrderNo,
-		"transaction_id": req.TransactionID,
-		"amount":         formatAmount(req.Amount),
-		"status":         req.Status,
-		"success_time":   req.SuccessTime,
-		"timestamp":      req.Timestamp,
-		"sign":           req.Sign,
+		FieldRefundNo:      req.RefundNo,
+		FieldOrderNo:       req.OrderNo,
+		FieldTransactionID: req.TransactionID,
+		FieldAmount:        formatAmount(req.Amount),
+		FieldStatus:        req.Status,
+		FieldSuccessTime:   req.SuccessTime,
+		FieldTimestamp:     req.Timestamp,
+		FieldSign:          req.Sign,
 	}
 	return VerifySign(params, appSecret, maxDelay)
 }
@@ -117,25 +117,25 @@ func VerifyRefundNotify(req *RefundNotifyRequest, appSecret string, maxDelay int
 }
 
 func writeNotifySuccess(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", ContentTypeJSON)
+	w.Header().Set(FieldContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
-		"code":    NotifyRespCodeSuccess,
-		"message": NotifyRespMsgSuccess,
+		FieldCode:    NotifyRespCodeSuccess,
+		FieldMessage: NotifyRespMsgSuccess,
 	})
 }
 
 func writeNotifyError(w http.ResponseWriter, code int, message string) {
-	w.Header().Set("Content-Type", ContentTypeJSON)
+	w.Header().Set(FieldContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
-		"code":    code,
-		"message": message,
+		FieldCode:    code,
+		FieldMessage: message,
 	})
 }
 
 func formatAmount(amount float64) string {
-	return fmt.Sprintf("%.2f", amount)
+	return fmt.Sprintf(AmountFormat, amount)
 }
 
 func formatInt(v int) string {
