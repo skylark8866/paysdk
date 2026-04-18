@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"shop-demo/config"
@@ -127,8 +126,7 @@ func (s *RechargeService) HandlePaymentCallback(outOrderNo string, status int) e
 	if s.sseHub != nil {
 		msg := xgdnpay.NewPayNotifyMessage(outOrderNo, order.PayAmount, xgdnpay.PayStatusPaid).
 			SetPayType(xgdnpay.PayChannelWechat)
-		data := sse.FormatEvent(sse.EventPayNotify, mustMarshal(msg))
-		s.sseHub.Broadcast(outOrderNo, data)
+		s.sseHub.BroadcastMessage(outOrderNo, msg)
 	}
 
 	return nil
@@ -140,9 +138,4 @@ func (s *RechargeService) GetUserOrders(userID uint64, limit int) ([]model.Recha
 
 func (s *RechargeService) GetUserBalanceLogs(userID uint64, limit int) ([]model.BalanceLog, error) {
 	return s.repo.GetUserBalanceLogs(userID, limit)
-}
-
-func mustMarshal(v interface{}) []byte {
-	data, _ := json.Marshal(v)
-	return data
 }

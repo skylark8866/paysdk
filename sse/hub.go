@@ -192,6 +192,16 @@ func (h *Hub) Broadcast(channel string, data []byte) {
 	h.broadcast <- broadcastMessage{channel: channel, data: data}
 }
 
+func (h *Hub) BroadcastMessage(channel string, msg SSEMessage) error {
+	jsonData, err := msg.ToJSON()
+	if err != nil {
+		return err
+	}
+	data := FormatEvent(msg.EventName(), jsonData)
+	h.broadcast <- broadcastMessage{channel: channel, data: data}
+	return nil
+}
+
 func (h *Hub) BroadcastJSON(channel string, v interface{}) error {
 	data, err := encodeJSON(v)
 	if err != nil {

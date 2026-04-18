@@ -1,7 +1,7 @@
 # XGDN Pay SDK 开发手册
 
-> 版本：v1.4.2  
-> 更新日期：2026-04-18  
+> 版本：v1.5.0  
+> 更新日期：2026-04-19  
 > 仓库：https://github.com/skylark8866/paysdk
 
 ## 目录
@@ -64,7 +64,7 @@ paysdk/
 ### 安装
 
 ```bash
-go get github.com/skylark8866/paysdk@v1.4.2
+go get github.com/skylark8866/paysdk@v1.5.0
 ```
 
 ### 30 秒上手
@@ -411,20 +411,26 @@ func writeAuthError(c *gin.Context, message string) {
 #### 3. 广播消息
 
 ```go
-// 使用类型安全的方式格式化并发送事件
+// 推荐：使用 BroadcastMessage 一行搞定
 msg := xgdnpay.NewPayNotifyMessage(orderNo, amount, xgdnpay.PayStatusPaid).
     SetPayType(xgdnpay.PayChannelWechat)
-data := sse.FormatEvent(sse.EventPayNotify, mustMarshal(msg))
-sseHub.Broadcast(orderNo, data)
+sseHub.BroadcastMessage(orderNo, msg)
 
-// 或使用 JSON 广播
-sseHub.BroadcastJSON(channel, map[string]any{
-    "event": sse.EventPayNotify,
-    "data":  msg,
-})
+// 底层 API：手动控制格式
+data := sse.FormatEvent(sse.EventPayNotify, jsonData)
+sseHub.Broadcast(orderNo, data)
 ```
 
-**关键：** `sse.FormatEvent` 和 `Message.SetEvent` 只接受 `sse.EventName` 类型，不接受裸字符串。可用的事件名常量：
+**SSEMessage 接口**：`PayNotifyMessage` 实现了 `sse.SSEMessage` 接口，自动处理事件名和序列化：
+
+```go
+type SSEMessage interface {
+    EventName() EventName
+    ToJSON() ([]byte, error)
+}
+```
+
+**可用事件名常量**：
 
 | 常量 | 值 | 用途 |
 |------|-----|------|
@@ -886,6 +892,25 @@ go run main.go
 ---
 
 ## 更新日志
+
+### v1.5.0 (2026-04-19)
+
+- **SSEMessage 接口**：新增 `sse.SSEMessage` 接口，统一 SSE 消息格式
+- **BroadcastMessage 方法**：Hub 新增 `BroadcastMessage(channel, msg)` 方法，一行代码完成事件名 + 序列化 + 广播
+- **PayNotifyMessage 实现 SSEMessage**：自动绑定 `EventPayNotify` 事件名，简化调用
+- **简化调用代码**：从 4 行减少到 2 行
+
+**迁移指南：**
+```go
+// 之前
+msg := xgdnpay.NewPayNotifyMessage(orderNo, amount, status)
+data := sse.FormatEvent(sse.EventPayNotify, mustMarshal(msg))
+sseHub.Broadcast(channel, data)
+
+// 之后
+msg := xgdnpay.NewPayNotifyMessage(orderNo, amount, status)
+sseHub.BroadcastMessage(channel, msg)
+```
 
 ### v1.4.2 (2026-04-18)
 

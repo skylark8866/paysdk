@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+type SSEMessage interface {
+	EventName() EventName
+	ToJSON() ([]byte, error)
+}
+
 type Message struct {
 	ID    string      `json:"id,omitempty"`
 	Event EventName   `json:"event,omitempty"`

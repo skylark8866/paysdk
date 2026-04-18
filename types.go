@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/skylark8866/paysdk/sse"
 )
 
 type PayType string
@@ -319,4 +321,12 @@ func (m *PayNotifyMessage) SetPayType(payType PayChannel) *PayNotifyMessage {
 func (m *PayNotifyMessage) SetTransaction(id string) *PayNotifyMessage {
 	m.Transaction = id
 	return m
+}
+
+func (m *PayNotifyMessage) EventName() sse.EventName {
+	return sse.EventPayNotify
+}
+
+func (m *PayNotifyMessage) ToJSON() ([]byte, error) {
+	return json.Marshal(m)
 }
