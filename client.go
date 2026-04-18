@@ -98,6 +98,10 @@ func (c *Client) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*Cre
 	outOrderNo := req.OutOrderNo
 	if outOrderNo == "" {
 		outOrderNo = generateOrderNo()
+	} else {
+		if err := ValidateOutOrderNo(outOrderNo); err != nil {
+			return nil, err
+		}
 	}
 
 	payType := req.PayType
@@ -459,4 +463,19 @@ func (c *Client) VerifyNotify(req *NotifyRequest) error {
 
 func (c *Client) VerifyRefundNotify(req *RefundNotifyRequest) error {
 	return VerifyRefundNotifyWithSecret(req, c.appSecret, DefaultMaxDelay)
+}
+
+func ValidateOutOrderNo(no string) error {
+	if no == "" {
+		return nil
+	}
+	if len(no) > MaxOutOrderNoLength {
+		return NewSDKError(-1, ErrMsgOutOrderNoTooLong)
+	}
+	for _, r := range no {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-') {
+			return NewSDKError(-1, ErrMsgOutOrderNoFormat)
+		}
+	}
+	return nil
 }

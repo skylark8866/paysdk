@@ -1,6 +1,6 @@
 # XGDN Pay SDK 开发手册
 
-> 版本：v1.4.1  
+> 版本：v1.4.2  
 > 更新日期：2026-04-18  
 > 仓库：https://github.com/skylark8866/paysdk
 
@@ -64,7 +64,7 @@ paysdk/
 ### 安装
 
 ```bash
-go get github.com/skylark8866/paysdk@v1.4.1
+go get github.com/skylark8866/paysdk@v1.4.2
 ```
 
 ### 30 秒上手
@@ -672,6 +672,32 @@ order, err := client.CreateOrder(ctx, &xgdnpay.CreateOrderRequest{
 })
 ```
 
+**OutOrderNo 格式要求：**
+- 长度：1-64 字符（空值允许，会自动生成）
+- 字符集：只允许字母、数字、下划线（_）、中划线（-）
+- 不允许中文、空格、特殊符号
+
+```go
+// ✅ 合法
+"ORDER_001"
+"order-2026-04-18-001"
+"ORD123456"
+
+// ❌ 非法（会返回错误）
+"订单001"      // 包含中文
+"order 001"    // 包含空格
+"order@001"    // 包含特殊符号
+"6"            // 过于简单，容易重复
+```
+
+SDK 会在 `CreateOrder` 时自动验证格式，也可手动调用：
+
+```go
+if err := xgdnpay.ValidateOutOrderNo(outOrderNo); err != nil {
+    // 格式错误
+}
+```
+
 ### 4. SSE Channel 命名
 
 使用订单号作为 channel，确保唯一性：
@@ -860,6 +886,13 @@ go run main.go
 ---
 
 ## 更新日志
+
+### v1.4.2 (2026-04-18)
+
+- **OutOrderNo 格式验证**：SDK 端验证商户订单号格式，长度限制 64 字符，只允许字母、数字、下划线、中划线
+- **后端重复订单号检查**：创建订单前检查 OutOrderNo 是否已存在，返回友好错误提示
+- 新增 `ValidateOutOrderNo()` 函数用于验证商户订单号
+- 修复用户传入简单订单号（如 "6"）重复时返回 500 错误的问题
 
 ### v1.4.1 (2026-04-18)
 

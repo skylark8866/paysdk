@@ -75,6 +75,13 @@ const (
 	ErrMsgOrderClosed       = "订单已关闭"
 	ErrMsgOrderRefunded     = "订单已退款"
 	ErrMsgInvalidPayType    = "不支持的支付类型"
+	ErrMsgOutOrderNoTooLong = "商户订单号长度不能超过64字符"
+	ErrMsgOutOrderNoFormat  = "商户订单号只能包含字母、数字、下划线、中划线"
+)
+
+const (
+	MinOutOrderNoLength = 1
+	MaxOutOrderNoLength = 64
 )
 
 const (
