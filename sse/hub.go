@@ -122,18 +122,34 @@ func (h *Hub) Run(ctx context.Context) {
 			h.mu.RUnlock()
 
 		case <-keepAliveTicker.C:
-			h.mu.RLock()
-			keepAlive := []byte(SSECommentKeepAlive)
-			for _, clients := range h.clients {
-				for client := range clients {
-					select {
-					case client.Send <- keepAlive:
-					default:
-					}
-				}
-			}
-			h.mu.RUnlock()
+			h.cleanStaleClients()
 		}
+	}
+}
+
+func (h *Hub) cleanStaleClients() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	keepAlive := []byte(SSECommentKeepAlive)
+	var staleClients []*Client
+
+	for channel, clients := range h.clients {
+		for client := range clients {
+			select {
+			case client.Send <- keepAlive:
+			default:
+				staleClients = append(staleClients, client)
+				delete(clients, client)
+			}
+		}
+		if len(clients) == 0 {
+			delete(h.clients, channel)
+		}
+	}
+
+	for _, client := range staleClients {
+		client.Close()
 	}
 }
 
