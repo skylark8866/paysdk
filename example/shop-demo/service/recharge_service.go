@@ -41,17 +41,16 @@ type CreateOrderResult struct {
 	PayOrderNo  string
 	PayURL      string
 	CodeURL     string
-	PayAmount   float64
-	BonusAmount float64
+	PayAmount   int64
+	BonusAmount int64
 }
 
 func (s *RechargeService) CreateOrder(ctx context.Context, userID uint64, username, packageID string) (*CreateOrderResult, error) {
 	var pkg *model.RechargePackage
 
-	// 检查是否是自定义金额 (格式: custom_xxx)
 	if strings.HasPrefix(packageID, "custom_") {
 		amountStr := strings.TrimPrefix(packageID, "custom_")
-		if amount, err := strconv.ParseFloat(amountStr, 64); err == nil && amount >= 1 && amount <= 10000 {
+		if amount, err := strconv.ParseInt(amountStr, 10, 64); err == nil && amount >= 1 && amount <= 10000 {
 			pkg = model.NewCustomPackage(amount)
 		}
 	} else {

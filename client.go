@@ -20,6 +20,17 @@ type Client struct {
 
 type ClientOption func(*Client)
 
+func WithAppConfig(appID, appSecret string) ClientOption {
+	return func(c *Client) {
+		if appID != "" {
+			c.appID = appID
+		}
+		if appSecret != "" {
+			c.appSecret = appSecret
+		}
+	}
+}
+
 func WithBaseURL(baseURL string) ClientOption {
 	return func(c *Client) {
 		c.baseURL = baseURL
@@ -32,11 +43,13 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
-func NewClient(appID, appSecret string, opts ...ClientOption) *Client {
+func NewClient(opts ...ClientOption) *Client {
+	cfg := loadSDKConfig()
+
 	c := &Client{
-		appID:     appID,
-		appSecret: appSecret,
-		baseURL:   DefaultBaseURL,
+		appID:     cfg.Payment.AppID,
+		appSecret: cfg.Payment.AppSecret,
+		baseURL:   cfg.Payment.BaseURL,
 		client:    resty.New(),
 	}
 

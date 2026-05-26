@@ -95,7 +95,7 @@ func (r *Repository) GetUserBalanceLogs(userID uint64, limit int) ([]model.Balan
 	return logs, err
 }
 
-func (r *Repository) AddUserBalance(userID uint64, amount float64) (float64, error) {
+func (r *Repository) AddUserBalance(userID uint64, amount int64) (int64, error) {
 	var user model.User
 	err := r.db.Model(&model.User{}).
 		Where("id = ?", userID).

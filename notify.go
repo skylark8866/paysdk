@@ -134,8 +134,8 @@ func writeNotifyError(w http.ResponseWriter, code int, message string) {
 	})
 }
 
-func formatAmount(amount float64) string {
-	return fmt.Sprintf(AmountFormat, amount)
+func formatAmount(amount int64) string {
+	return fmt.Sprintf("%d", amount)
 }
 
 func formatInt(v int) string {

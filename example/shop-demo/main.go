@@ -19,20 +19,12 @@ import (
 func main() {
 	cfg := config.Load()
 
-	if cfg.Payment.AppID == "" || cfg.Payment.AppSecret == "" {
-		log.Fatal("请配置 payment.app_id 和 payment.app_secret")
-	}
-
 	repository, err := repo.New(cfg.Database.Path)
 	if err != nil {
 		log.Fatal("数据库初始化失败:", err)
 	}
 
-	client := xgdnpay.NewClient(
-		cfg.Payment.AppID,
-		cfg.Payment.AppSecret,
-		xgdnpay.WithBaseURL(cfg.Payment.BaseURL),
-	)
+	client := xgdnpay.NewClient()
 
 	sseHub := sse.NewHub()
 	ctx, cancel := context.WithCancel(context.Background())

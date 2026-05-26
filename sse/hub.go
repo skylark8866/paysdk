@@ -203,7 +203,7 @@ func (h *Hub) BroadcastMessage(channel string, msg SSEMessage) error {
 }
 
 func (h *Hub) BroadcastJSON(channel string, v interface{}) error {
-	data, err := encodeJSON(v)
+	data, err := FormatJSON(v)
 	if err != nil {
 		return err
 	}

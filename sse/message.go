@@ -1,12 +1,12 @@
 package sse
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/skylark8866/paysdk/sse/protocol"
 )
 
 type SSEMessage interface {
@@ -15,8 +15,8 @@ type SSEMessage interface {
 }
 
 type Message struct {
-	ID    string      `json:"id,omitempty"`
-	Event EventName   `json:"event,omitempty"`
+	ID    string    `json:"id,omitempty"`
+	Event EventName `json:"event,omitempty"`
 	Data  interface{} `json:"data"`
 }
 
@@ -35,76 +35,20 @@ func (m *Message) SetEvent(event EventName) *Message {
 }
 
 func (m *Message) Bytes() []byte {
-	var buf bytes.Buffer
-
-	if m.ID != "" {
-		buf.WriteString("id: ")
-		buf.WriteString(m.ID)
-		buf.WriteString("\n")
-	}
-
-	if m.Event != "" {
-		buf.WriteString("event: ")
-		buf.WriteString(string(m.Event))
-		buf.WriteString("\n")
-	}
-
 	dataBytes, _ := json.Marshal(m.Data)
-	buf.WriteString("data: ")
-	buf.Write(dataBytes)
-	buf.WriteString("\n\n")
-
-	return buf.Bytes()
-}
-
-func encodeJSON(v interface{}) ([]byte, error) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	return formatSSE("", "", data), nil
-}
-
-func formatSSE(id string, event string, data []byte) []byte {
-	var buf bytes.Buffer
-
-	if id != "" {
-		buf.WriteString("id: ")
-		buf.WriteString(id)
-		buf.WriteString("\n")
-	}
-
-	if event != "" {
-		buf.WriteString("event: ")
-		buf.WriteString(event)
-		buf.WriteString("\n")
-	}
-
-	lines := strings.Split(string(data), "\n")
-	for _, line := range lines {
-		buf.WriteString("data: ")
-		buf.WriteString(line)
-		buf.WriteString("\n")
-	}
-	buf.WriteString("\n")
-
-	return buf.Bytes()
+	return protocol.FormatEvent(m.Event, dataBytes)
 }
 
 func FormatEvent(event EventName, data []byte) []byte {
-	return formatSSE("", string(event), data)
+	return protocol.FormatEvent(event, data)
 }
 
 func FormatData(data []byte) []byte {
-	return formatSSE("", "", data)
+	return protocol.FormatData(data)
 }
 
 func FormatJSON(v interface{}) ([]byte, error) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	return FormatData(data), nil
+	return protocol.FormatJSON(v)
 }
 
 func GenerateID() string {

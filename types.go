@@ -6,28 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/skylark8866/paysdk/protocol"
 	"github.com/skylark8866/paysdk/sse"
 )
 
-type PayType string
+type PayType = protocol.PayType
 
 const (
-	PayTypeNative PayType = "native"
-	PayTypeJSAPI  PayType = "jsapi"
+	PayTypeNative = protocol.PayTypeNative
+	PayTypeJSAPI  = protocol.PayTypeJSAPI
+	PayTypeH5     = protocol.PayTypeH5
 )
-
-var validPayTypes = map[PayType]bool{
-	PayTypeNative: true,
-	PayTypeJSAPI:  true,
-}
-
-func (t PayType) IsValid() bool {
-	return validPayTypes[t]
-}
-
-func (t PayType) String() string {
-	return string(t)
-}
 
 func NormalizePayType(raw string) PayType {
 	lowered := PayType(strings.ToLower(raw))
@@ -37,73 +26,31 @@ func NormalizePayType(raw string) PayType {
 	return PayType(strings.ToLower(raw))
 }
 
-type PayStatus string
+type PayStatus = protocol.PayStatus
 
 const (
-	PayStatusPaid    PayStatus = "paid"
-	PayStatusPending PayStatus = "pending"
-	PayStatusClosed  PayStatus = "closed"
+	PayStatusPaid    = protocol.PayStatusPaid
+	PayStatusPending = protocol.PayStatusPending
+	PayStatusClosed  = protocol.PayStatusClosed
 )
 
-var validPayStatuses = map[PayStatus]bool{
-	PayStatusPaid:    true,
-	PayStatusPending: true,
-	PayStatusClosed:  true,
-}
-
-func (s PayStatus) IsValid() bool {
-	return validPayStatuses[s]
-}
-
-func (s PayStatus) String() string {
-	return string(s)
-}
-
-type PayChannel string
+type PayChannel = protocol.PayChannel
 
 const (
-	PayChannelWechat PayChannel = "wechat"
-	PayChannelAlipay PayChannel = "alipay"
+	PayChannelWechat = protocol.PayChannelWechat
+	PayChannelAlipay = protocol.PayChannelAlipay
 )
 
-var validPayChannels = map[PayChannel]bool{
-	PayChannelWechat: true,
-	PayChannelAlipay: true,
-}
-
-func (ch PayChannel) IsValid() bool {
-	return validPayChannels[ch]
-}
-
-func (ch PayChannel) String() string {
-	return string(ch)
-}
-
-type OrderStatus int
+type OrderStatus = protocol.OrderStatus
 
 const (
-	OrderStatusPending  OrderStatus = 0
-	OrderStatusPaid     OrderStatus = 1
-	OrderStatusClosed   OrderStatus = 2
-	OrderStatusRefunded OrderStatus = 3
+	OrderStatusPending  = protocol.OrderStatusPending
+	OrderStatusPaid     = protocol.OrderStatusPaid
+	OrderStatusClosed   = protocol.OrderStatusClosed
+	OrderStatusRefunded = protocol.OrderStatusRefunded
 )
 
-var validOrderStatuses = map[OrderStatus]bool{
-	OrderStatusPending:  true,
-	OrderStatusPaid:     true,
-	OrderStatusClosed:   true,
-	OrderStatusRefunded: true,
-}
-
-func (s OrderStatus) IsValid() bool {
-	return validOrderStatuses[s]
-}
-
-func (s OrderStatus) String() string {
-	return fmt.Sprintf("%d", int(s))
-}
-
-func (s OrderStatus) Text() string {
+func OrderStatusText(s OrderStatus) string {
 	switch s {
 	case OrderStatusPending:
 		return "待支付"
@@ -118,33 +65,17 @@ func (s OrderStatus) Text() string {
 	}
 }
 
-type RefundStatus int
+type RefundStatus = protocol.RefundStatus
 
 const (
-	RefundStatusProcessing RefundStatus = 0
-	RefundStatusSuccess    RefundStatus = 1
-	RefundStatusClosed     RefundStatus = 2
-	RefundStatusFailed     RefundStatus = 3
-	RefundStatusAbnormal   RefundStatus = 4
+	RefundStatusProcessing = protocol.RefundStatusProcessing
+	RefundStatusSuccess    = protocol.RefundStatusSuccess
+	RefundStatusClosed     = protocol.RefundStatusClosed
+	RefundStatusFailed     = protocol.RefundStatusFailed
+	RefundStatusAbnormal   = protocol.RefundStatusAbnormal
 )
 
-var validRefundStatuses = map[RefundStatus]bool{
-	RefundStatusProcessing: true,
-	RefundStatusSuccess:    true,
-	RefundStatusClosed:     true,
-	RefundStatusFailed:     true,
-	RefundStatusAbnormal:   true,
-}
-
-func (s RefundStatus) IsValid() bool {
-	return validRefundStatuses[s]
-}
-
-func (s RefundStatus) String() string {
-	return fmt.Sprintf("%d", int(s))
-}
-
-func (s RefundStatus) Text() string {
+func RefundStatusText(s RefundStatus) string {
 	switch s {
 	case RefundStatusProcessing:
 		return "退款中"
@@ -193,7 +124,7 @@ var (
 
 type CreateOrderRequest struct {
 	OutOrderNo string                 `json:"out_order_no"`
-	Amount     float64                `json:"amount"`
+	Amount     int64                  `json:"amount"`
 	Title      string                 `json:"title"`
 	PayType    PayType                `json:"pay_type"`
 	OpenID     string                 `json:"openid,omitempty"`
@@ -209,11 +140,11 @@ type CreateOrderResponse struct {
 }
 
 type QueryOrderResponse struct {
-	OrderNo       string  `json:"order_no"`
-	Status        int     `json:"status"`
-	Amount        float64 `json:"amount"`
-	TransactionID string  `json:"transaction_id,omitempty"`
-	PaidAt        string  `json:"paid_at,omitempty"`
+	OrderNo       string `json:"order_no"`
+	Status        int    `json:"status"`
+	Amount        int64  `json:"amount"`
+	TransactionID string `json:"transaction_id,omitempty"`
+	PaidAt        string `json:"paid_at,omitempty"`
 }
 
 type CheckStatusResponse struct {
@@ -223,56 +154,56 @@ type CheckStatusResponse struct {
 }
 
 type RefundRequest struct {
-	OrderNo   string  `json:"order_no"`
-	RefundNo  string  `json:"refund_no"`
-	Amount    float64 `json:"amount"`
-	Reason    string  `json:"reason"`
-	NotifyURL string  `json:"notify_url,omitempty"`
+	OrderNo   string `json:"order_no"`
+	RefundNo  string `json:"refund_no"`
+	Amount    int64  `json:"amount"`
+	Reason    string `json:"reason"`
+	NotifyURL string `json:"notify_url,omitempty"`
 }
 
 type RefundResponse struct {
-	ID           uint64  `json:"id"`
-	RefundNo     string  `json:"refund_no"`
-	OrderNo      string  `json:"order_no"`
-	RefundAmount float64 `json:"refund_amount"`
-	RefundReason string  `json:"refund_reason"`
-	Status       int     `json:"status"`
-	CreatedAt    string  `json:"created_at"`
+	ID           uint64 `json:"id"`
+	RefundNo     string `json:"refund_no"`
+	OrderNo      string `json:"order_no"`
+	RefundAmount int64  `json:"refund_amount"`
+	RefundReason string `json:"refund_reason"`
+	Status       int    `json:"status"`
+	CreatedAt    string `json:"created_at"`
 }
 
 type OrderRefundInfo struct {
-	OrderNo         string  `json:"order_no"`
-	OrderAmount     float64 `json:"order_amount"`
-	TotalRefunded   float64 `json:"total_refunded"`
-	RemainingAmount float64 `json:"remaining_amount"`
-	CanRefund       bool    `json:"can_refund"`
-	Message         string  `json:"message,omitempty"`
+	OrderNo         string `json:"order_no"`
+	OrderAmount     int64  `json:"order_amount"`
+	TotalRefunded   int64  `json:"total_refunded"`
+	RemainingAmount int64  `json:"remaining_amount"`
+	CanRefund       bool   `json:"can_refund"`
+	Message         string `json:"message,omitempty"`
 }
 
 type NotifyRequest struct {
-	AppID         string  `json:"app_id"`
-	OrderNo       string  `json:"order_no"`
-	OutOrderNo    string  `json:"out_order_no"`
-	Amount        float64 `json:"amount"`
-	Title         string  `json:"title"`
-	PayType       string  `json:"pay_type"`
-	Status        int     `json:"status"`
-	TransactionID string  `json:"transaction_id"`
-	PaidAt        string  `json:"paid_at"`
-	Timestamp     string  `json:"timestamp"`
-	Nonce         string  `json:"nonce"`
-	Sign          string  `json:"sign"`
+	AppID         string `json:"app_id"`
+	OrderNo       string `json:"order_no"`
+	OutOrderNo    string `json:"out_order_no"`
+	Amount        int64  `json:"amount"`
+	Title         string `json:"title"`
+	PayType       string `json:"pay_type"`
+	Status        int    `json:"status"`
+	TransactionID string `json:"transaction_id"`
+	PaidAt        string `json:"paid_at"`
+	Timestamp     string `json:"timestamp"`
+	Nonce         string `json:"nonce"`
+	Sign          string `json:"sign"`
 }
 
 type RefundNotifyRequest struct {
-	RefundNo      string  `json:"refund_no"`
-	OrderNo       string  `json:"order_no"`
-	TransactionID string  `json:"transaction_id"`
-	Amount        float64 `json:"amount"`
-	Status        string  `json:"status"`
-	SuccessTime   string  `json:"success_time"`
-	Timestamp     string  `json:"timestamp"`
-	Sign          string  `json:"sign"`
+	RefundNo      string `json:"refund_no"`
+	OrderNo       string `json:"order_no"`
+	TransactionID string `json:"transaction_id"`
+	Amount        int64  `json:"amount"`
+	Status        string `json:"status"`
+	SuccessTime   string `json:"success_time"`
+	Timestamp     string `json:"timestamp"`
+	Sign          string `json:"sign"`
 }
 
 type SignedRequest struct {
@@ -292,14 +223,14 @@ type apiResponse[T any] struct {
 type PayNotifyMessage struct {
 	OrderNo     string     `json:"order_no"`
 	OutOrderNo  string     `json:"out_order_no"`
-	Amount      float64    `json:"amount"`
+	Amount      int64      `json:"amount"`
 	Status      PayStatus  `json:"status"`
 	PaidAt      string     `json:"paid_at"`
 	PayType     PayChannel `json:"pay_type"`
 	Transaction string     `json:"transaction_id,omitempty"`
 }
 
-func NewPayNotifyMessage(orderNo string, amount float64, status PayStatus) *PayNotifyMessage {
+func NewPayNotifyMessage(orderNo string, amount int64, status PayStatus) *PayNotifyMessage {
 	return &PayNotifyMessage{
 		OrderNo: orderNo,
 		Amount:  amount,

@@ -1,0 +1,13 @@
+server:
+  port: "8081"
+
+payment:
+  app_id: "demo"
+  app_secret: "b498f209c52fdbc59a15a87fdb1f01cd"
+  base_url: "http://localhost:8093"
+
+jwt:
+  secret: "your-secure-jwt-secret-key"
+
+database:
+  path: "./shop-demo.db"

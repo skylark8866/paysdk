@@ -2,8 +2,8 @@ server:
   port: "8081"
 
 payment:
-  app_id: "app_b8ddf3dc41c1bb6b"
-  app_secret: "b17fa2d543d770df0dc6844d14f15736"
+  app_id: "app_d25ccc24bbef8b9c"
+  app_secret: "5f0a5802710951fe52665469b1eb31ab"
   base_url: "https://pay.xgdn.net"
   public_url: "https://shop-demo.xgdn.net"
 

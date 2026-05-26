@@ -1,59 +1,60 @@
 package xgdnpay
 
+import "github.com/skylark8866/paysdk/protocol"
+
 const (
 	DefaultBaseURL = "https://pay.xgdn.net"
 
-	ContentTypeJSON = "application/json"
-	DateTimeFormat  = "2006-01-02 15:04:05"
-	AmountFormat    = "%.2f"
+	ContentTypeJSON = protocol.ContentTypeJSON
+	DateTimeFormat  = protocol.DateTimeFormat
 )
 
 const (
-	PathOrderCreate = "/api/v1/order/create"
-	PathOrderQuery  = "/api/v1/order/query"
-	PathOrderCheck  = "/api/v1/order/check"
-	PathOrderClose  = "/api/v1/order/close"
-	PathRefund      = "/api/v1/refund"
-	PathRefundQuery = "/api/v1/refund/query"
-	PathRefundOrder = "/api/v1/refund/order"
-	PathRefundInfo  = "/api/v1/refund/info"
+	PathOrderCreate  = protocol.PathOrderCreate
+	PathOrderQuery   = protocol.PathOrderQuery
+	PathOrderCheck   = protocol.PathOrderCheck
+	PathOrderClose   = protocol.PathOrderClose
+	PathRefund       = protocol.PathRefund
+	PathRefundQuery  = protocol.PathRefundQuery
+	PathRefundOrder  = protocol.PathRefundOrder
+	PathRefundInfo   = protocol.PathRefundInfo
 )
 
 const (
-	FieldAppID         = "app_id"
-	FieldOrderNo       = "order_no"
-	FieldOutOrderNo    = "out_order_no"
-	FieldAmount        = "amount"
-	FieldTitle         = "title"
-	FieldPayType       = "pay_type"
-	FieldOpenID        = "openid"
-	FieldReturnURL     = "return_url"
-	FieldNotifyURL     = "notify_url"
-	FieldExtra         = "extra"
-	FieldRefundNo      = "refund_no"
-	FieldReason        = "reason"
-	FieldStatus        = "status"
-	FieldTransactionID = "transaction_id"
-	FieldPaidAt        = "paid_at"
-	FieldTimestamp     = "timestamp"
-	FieldNonce         = "nonce"
-	FieldSign          = "sign"
-	FieldData          = "data"
-	FieldAppSecret     = "app_secret"
-	FieldSuccessTime   = "success_time"
-	FieldRefundAmount  = "refund_amount"
-	FieldRefundReason  = "refund_reason"
-	FieldCreatedAt     = "created_at"
-	FieldOrderAmount   = "order_amount"
-	FieldTotalRefunded = "total_refunded"
-	FieldRemaining     = "remaining_amount"
-	FieldCanRefund     = "can_refund"
-	FieldMessage       = "message"
-	FieldCode          = "code"
-	FieldPayURL        = "pay_url"
-	FieldCodeURL       = "code_url"
-	FieldError         = "error"
-	FieldContentType   = "Content-Type"
+	FieldAppID         = protocol.FieldAppID
+	FieldOrderNo       = protocol.FieldOrderNo
+	FieldOutOrderNo    = protocol.FieldOutOrderNo
+	FieldAmount        = protocol.FieldAmount
+	FieldTitle         = protocol.FieldTitle
+	FieldPayType       = protocol.FieldPayType
+	FieldOpenID        = protocol.FieldOpenID
+	FieldReturnURL     = protocol.FieldReturnURL
+	FieldNotifyURL     = protocol.FieldNotifyURL
+	FieldExtra         = protocol.FieldExtra
+	FieldRefundNo      = protocol.FieldRefundNo
+	FieldReason        = protocol.FieldReason
+	FieldStatus        = protocol.FieldStatus
+	FieldTransactionID = protocol.FieldTransactionID
+	FieldPaidAt        = protocol.FieldPaidAt
+	FieldTimestamp     = protocol.FieldTimestamp
+	FieldNonce         = protocol.FieldNonce
+	FieldSign          = protocol.FieldSign
+	FieldData          = protocol.FieldData
+	FieldAppSecret     = protocol.FieldAppSecret
+	FieldSuccessTime   = protocol.FieldSuccessTime
+	FieldRefundAmount  = protocol.FieldRefundAmount
+	FieldRefundReason  = protocol.FieldRefundReason
+	FieldCreatedAt     = protocol.FieldCreatedAt
+	FieldOrderAmount   = protocol.FieldOrderAmount
+	FieldTotalRefunded = protocol.FieldTotalRefunded
+	FieldRemaining     = protocol.FieldRemaining
+	FieldCanRefund     = protocol.FieldCanRefund
+	FieldMessage       = protocol.FieldMessage
+	FieldCode          = protocol.FieldCode
+	FieldPayURL        = protocol.FieldPayURL
+	FieldCodeURL       = protocol.FieldCodeURL
+	FieldError         = protocol.FieldError
+	FieldContentType   = protocol.FieldContentType
 )
 
 const (
@@ -80,8 +81,8 @@ const (
 )
 
 const (
-	MinOutOrderNoLength = 1
-	MaxOutOrderNoLength = 64
+	MinOutOrderNoLength = protocol.MinOutOrderNoLength
+	MaxOutOrderNoLength = protocol.MaxOutOrderNoLength
 )
 
 const (
@@ -97,12 +98,12 @@ const (
 )
 
 const (
-	OrderNoPrefix  = "ORD_"
-	RefundNoPrefix = "REF_"
+	OrderNoPrefix  = protocol.OrderNoPrefix
+	RefundNoPrefix = protocol.RefundNoPrefix
 
-	OrderNoRandomDigits = 6
+	OrderNoRandomDigits = protocol.OrderNoRandomDigits
 )
 
 const (
-	DefaultMaxDelay int64 = 300
+	DefaultMaxDelay = protocol.DefaultMaxDelay
 )

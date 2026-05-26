@@ -13,8 +13,7 @@ func main() {
 	fmt.Println()
 
 	client := xgdnpay.NewClient(
-		"app_your_app_id",
-		"your_app_secret",
+		xgdnpay.WithAppConfig("app_your_app_id", "your_app_secret"),
 		xgdnpay.WithBaseURL("http://localhost:8093"),
 		xgdnpay.WithTimeout(30*time.Second),
 	)
@@ -24,7 +23,7 @@ func main() {
 	fmt.Println("=== 1. 创建扫码支付订单 ===")
 	order, err := client.CreateOrder(ctx, &xgdnpay.CreateOrderRequest{
 		OutOrderNo: fmt.Sprintf("SDK_TEST_%d", time.Now().Unix()),
-		Amount:     0.01,
+		Amount:     1, // 1 cent = 0.01 yuan
 		Title:      "SDK开发测试",
 		PayType:    xgdnpay.PayTypeNative,
 		ReturnURL:  "http://localhost:3001/result",
@@ -48,7 +47,7 @@ func main() {
 		fmt.Printf("查询订单失败: %v\n", err)
 	} else {
 		fmt.Printf("订单状态: %d (0=待支付, 1=已支付, 2=已关闭, 3=已退款)\n", queryResult.Status)
-		fmt.Printf("订单金额: %.2f\n", queryResult.Amount)
+		fmt.Printf("订单金额: %.2f 元\n", float64(queryResult.Amount)/100)
 	}
 	fmt.Println()
 
@@ -67,9 +66,9 @@ func main() {
 	if err != nil {
 		fmt.Printf("获取退款信息失败: %v\n", err)
 	} else {
-		fmt.Printf("订单金额: %.2f\n", refundInfo.OrderAmount)
-		fmt.Printf("已退款: %.2f\n", refundInfo.TotalRefunded)
-		fmt.Printf("剩余可退: %.2f\n", refundInfo.RemainingAmount)
+		fmt.Printf("订单金额: %.2f 元\n", float64(refundInfo.OrderAmount)/100)
+		fmt.Printf("已退款: %.2f 元\n", float64(refundInfo.TotalRefunded)/100)
+		fmt.Printf("剩余可退: %.2f 元\n", float64(refundInfo.RemainingAmount)/100)
 		fmt.Printf("可退款: %v\n", refundInfo.CanRefund)
 		if refundInfo.Message != "" {
 			fmt.Printf("消息: %s\n", refundInfo.Message)

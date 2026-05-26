@@ -22,7 +22,7 @@ type AppState struct {
 
 	OrderNo     string
 	OutOrderNo  string
-	Amount      float64
+	Amount      int64
 	Title       string
 	PayType     xgdnpay.PayType
 	CodeURL     string
@@ -50,8 +50,7 @@ type Config struct {
 
 func NewState(cfg *Config) *AppState {
 	client := xgdnpay.NewClient(
-		cfg.AppID,
-		cfg.AppSecret,
+		xgdnpay.WithAppConfig(cfg.AppID, cfg.AppSecret),
 		xgdnpay.WithBaseURL(cfg.BaseURL),
 		xgdnpay.WithTimeout(30*time.Second),
 	)
@@ -59,7 +58,7 @@ func NewState(cfg *Config) *AppState {
 	return &AppState{
 		Config:  cfg,
 		Client:  client,
-		Amount:  0.01,
+		Amount:  1, // 1 cent = 0.01 yuan
 		Title:   "测试商品",
 		PayType: xgdnpay.PayTypeNative,
 		Status:  "就绪",
@@ -220,7 +219,7 @@ func (s *AppState) QueryOrder() {
 		s.IsRefunded = true
 	}
 
-	s.Status = fmt.Sprintf("状态: %s, 金额: %.2f", statusText, result.Amount)
+	s.Status = fmt.Sprintf("状态: %s, 金额: %.2f 元", statusText, float64(result.Amount)/100)
 }
 
 func (s *AppState) Refund() {

@@ -1,0 +1,13 @@
+server:
+  port: "8081"
+
+payment:
+  app_id: "app_d25ccc24bbef8b9c"
+  app_secret: "59780274eccbe3dc9c0361780dcc936d"
+  base_url: "https://pay.xgdn.net"
+
+jwt:
+  secret: "your-secure-jwt-secret-key"
+
+database:
+  path: "./shop-demo.db"

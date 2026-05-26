@@ -11,8 +11,7 @@ import (
 
 func main() {
 	client := xgdnpay.NewClient(
-		"app_your_app_id",
-		"your_app_secret",
+		xgdnpay.WithAppConfig("app_your_app_id", "your_app_secret"),
 		xgdnpay.WithTimeout(30*time.Second),
 		xgdnpay.WithBaseURL("http://127.0.0.1:8093"),
 	)
@@ -21,7 +20,7 @@ func main() {
 
 	fmt.Println("=== 创建扫码支付订单 ===")
 	order, err := client.CreateOrder(ctx, &xgdnpay.CreateOrderRequest{
-		Amount:  0.01,
+		Amount:  1, // 1 cent = 0.01 yuan
 		Title:   "测试商品",
 		PayType: xgdnpay.PayTypeNative,
 	})
@@ -43,8 +42,8 @@ func main() {
 		fmt.Printf("查询订单失败: %v\n", err)
 		return
 	}
-	fmt.Printf("订单状态: %d (%s)\n", queryResult.Status, xgdnpay.OrderStatus(queryResult.Status).Text())
-	fmt.Printf("订单金额: %.2f\n", queryResult.Amount)
+	fmt.Printf("订单状态: %d (%s)\n", queryResult.Status, xgdnpay.OrderStatusText(xgdnpay.OrderStatus(queryResult.Status)))
+	fmt.Printf("订单金额: %.2f 元\n", float64(queryResult.Amount)/100)
 
 	fmt.Println("\n=== 轮询等待支付（最多等待5分钟）===")
 	err = client.WaitForPayment(ctx, order.OrderNo, 2*time.Second, 5*time.Minute)
@@ -57,7 +56,7 @@ func main() {
 	fmt.Println("\n=== 申请退款 ===")
 	refund, err := client.CreateRefund(ctx, &xgdnpay.RefundRequest{
 		OrderNo: order.OrderNo,
-		Amount:  0.01,
+		Amount:  1, // 1 cent = 0.01 yuan
 		Reason:  "用户申请退款",
 	})
 	if err != nil {
@@ -65,7 +64,7 @@ func main() {
 		return
 	}
 	fmt.Printf("退款单号: %s\n", refund.RefundNo)
-	fmt.Printf("退款状态: %d (%s)\n", refund.Status, xgdnpay.RefundStatus(refund.Status).Text())
+	fmt.Printf("退款状态: %d (%s)\n", refund.Status, xgdnpay.RefundStatusText(xgdnpay.RefundStatus(refund.Status)))
 
 	fmt.Println("\n=== 查询退款状态 ===")
 	refundQuery, err := client.QueryRefund(ctx, refund.RefundNo)
@@ -73,15 +72,15 @@ func main() {
 		fmt.Printf("查询退款失败: %v\n", err)
 		return
 	}
-	fmt.Printf("退款状态: %d (%s)\n", refundQuery.Status, xgdnpay.RefundStatus(refundQuery.Status).Text())
-	fmt.Printf("退款金额: %.2f\n", refundQuery.RefundAmount)
+	fmt.Printf("退款状态: %d (%s)\n", refundQuery.Status, xgdnpay.RefundStatusText(xgdnpay.RefundStatus(refundQuery.Status)))
+	fmt.Printf("退款金额: %.2f 元\n", float64(refundQuery.RefundAmount)/100)
 }
 
 func ExampleNotifyHandler() {
-	client := xgdnpay.NewClient("app_id", "app_secret")
+	client := xgdnpay.NewClient(xgdnpay.WithAppConfig("app_id", "app_secret"))
 
 	notifyHandler := xgdnpay.NewNotifyHandler(client, func(req *xgdnpay.NotifyRequest) error {
-		fmt.Printf("收到支付回调: 订单号=%s, 金额=%.2f\n", req.OrderNo, req.Amount)
+		fmt.Printf("收到支付回调: 订单号=%s, 金额=%.2f 元\n", req.OrderNo, float64(req.Amount)/100)
 
 		if xgdnpay.OrderStatus(req.Status) == xgdnpay.OrderStatusPaid {
 			fmt.Println("支付成功，处理业务逻辑...")
@@ -96,11 +95,11 @@ func ExampleNotifyHandler() {
 }
 
 func ExampleRefundNotifyHandler() {
-	client := xgdnpay.NewClient("app_id", "app_secret")
+	client := xgdnpay.NewClient(xgdnpay.WithAppConfig("app_id", "app_secret"))
 
 	refundNotifyHandler := xgdnpay.NewRefundNotifyHandler(client, func(req *xgdnpay.RefundNotifyRequest) error {
-		fmt.Printf("收到退款回调: 退款单号=%s, 订单号=%s, 金额=%.2f, 状态=%s\n",
-			req.RefundNo, req.OrderNo, req.Amount, req.Status)
+		fmt.Printf("收到退款回调: 退款单号=%s, 订单号=%s, 金额=%.2f 元, 状态=%s\n",
+			req.RefundNo, req.OrderNo, float64(req.Amount)/100, req.Status)
 
 		if req.Status == "SUCCESS" {
 			fmt.Println("退款成功，处理业务逻辑...")
@@ -121,7 +120,7 @@ func ExampleManualVerify() {
 		OrderNo:       "PAY_xxx",
 		OutOrderNo:    "BUSINESS_001",
 		TransactionID: "WX_TRANS_001",
-		Amount:        0.01,
+		Amount:        1, // 1 cent = 0.01 yuan
 		Status:        int(xgdnpay.OrderStatusPaid),
 		PaidAt:        "2024-01-01 12:00:00",
 		Timestamp:     fmt.Sprintf("%d", time.Now().Unix()),
@@ -137,13 +136,13 @@ func ExampleManualVerify() {
 }
 
 func ExampleContext() {
-	client := xgdnpay.NewClient("app_id", "app_secret")
+	client := xgdnpay.NewClient(xgdnpay.WithAppConfig("app_id", "app_secret"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	order, err := client.CreateOrder(ctx, &xgdnpay.CreateOrderRequest{
-		Amount:  0.01,
+		Amount:  1, // 1 cent = 0.01 yuan
 		Title:   "测试商品",
 		PayType: xgdnpay.PayTypeNative,
 	})
@@ -161,10 +160,10 @@ func ExampleContext() {
 }
 
 func ExampleErrorHandling() {
-	client := xgdnpay.NewClient("app_id", "app_secret")
+	client := xgdnpay.NewClient(xgdnpay.WithAppConfig("app_id", "app_secret"))
 
 	order, err := client.CreateOrder(context.Background(), &xgdnpay.CreateOrderRequest{
-		Amount:  0.01,
+		Amount:  1, // 1 cent = 0.01 yuan
 		Title:   "测试商品",
 		PayType: xgdnpay.PayTypeNative,
 	})
